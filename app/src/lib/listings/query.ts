@@ -159,6 +159,9 @@ const SORTERS: Record<SortKey, (a: Listing, b: Listing) => number> = {
   newest: (a, b) => Date.parse(b.firstSeen) - Date.parse(a.firstSeen),
 };
 
+// Providers stop earlier when a page brings nothing new; known listings are never reopened.
+const MAX_PAGES_PER_PROVIDER = 10;
+
 /** A search always covers every site; `sources` only filters what is displayed. */
 export function toSearchCriteria(q: Query): SearchCriteria {
   return {
@@ -170,7 +173,7 @@ export function toSearchCriteria(q: Query): SearchCriteria {
     minRooms: q.minRooms,
     maxRooms: q.maxRooms,
     maxDpe: q.maxDpe,
-    maxPagesPerProvider: 2,
+    maxPagesPerProvider: MAX_PAGES_PER_PROVIDER,
   };
 }
 
