@@ -28,4 +28,7 @@ await $`mkdir -p ${DOWNLOADS_DIR} && rm -f ${DOWNLOADS_DIR}/immo-radar-extension
 await $`cd ${BUILD_DIR} && zip -qr ../../${DOWNLOADS_DIR}/immo-radar-extension.zip .`;
 await Bun.write(`${DOWNLOADS_DIR}/extension.json`, JSON.stringify({ version: manifest.version, appUrl }, null, 2));
 
+// Leave build/ usable for local development (the unpacked extension loaded from it).
+if (appUrl !== DEV_ORIGIN) await $`bunx plasmo build`.env({ ...process.env, PLASMO_PUBLIC_APP_URL: DEV_ORIGIN }).quiet();
+
 console.log(`Extension ${manifest.version} for ${appUrl} → ${DOWNLOADS_DIR}/immo-radar-extension.zip`);
