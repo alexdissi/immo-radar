@@ -1,7 +1,10 @@
 import type { PlasmoCSConfig } from "plasmo";
 import type { BridgeChannel, BridgeMessage, ExtensionEvent, ExtensionResponse } from "~contract";
 
-/** Relays requests from the web app page to the service worker, and events back. */
+/**
+ * Relays requests from the web app page to the service worker, and events back.
+ * `matches` is rewritten to the production origin by scripts/release.ts.
+ */
 export const config: PlasmoCSConfig = {
   matches: ["http://localhost:3737/*"],
   run_at: "document_start",

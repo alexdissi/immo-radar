@@ -27,7 +27,9 @@ export const extensionKeys = {
   settings: ["extension", "settings"] as const,
 };
 
-/** Installed extension version, or null when it is not detected. */
+const INSTALL_POLL_MS = 2500;
+
+/** Installed extension version, or null when it is not detected (polled until it shows up). */
 export function useExtensionVersion() {
   return useQuery({
     queryKey: extensionKeys.ping,
@@ -36,6 +38,7 @@ export function useExtensionVersion() {
         .then((r) => r.version)
         .catch(() => null),
     staleTime: 30_000,
+    refetchInterval: (query) => (query.state.data && !isOutdated(query.state.data) ? false : INSTALL_POLL_MS),
   });
 }
 

@@ -9,20 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { AUTOPILOT_MODES, autopilotMode } from "@/lib/autopilot";
+import { isOutdated, useExtensionVersion } from "@/lib/extension/queries";
 import { CITIES } from "@/lib/cities";
 import { kiloEuros } from "@/lib/format";
 import type { Query } from "@/lib/listings/types";
 import { cn } from "@/lib/utils";
 import { AppLogoMark } from "./AppLogo";
 import { ArrondissementPicker } from "./ArrondissementPicker";
+import { ExtensionInstallGuide } from "./ExtensionInstall";
 import { CityChecklist } from "./CitySelect";
 import { CheckboxRow, NumberInput } from "./controls";
 
 const STEPS = [
-  { title: "Où veux-tu acheter ?", description: "Coche les villes qui t'intéressent. Tu pourras changer ça à tout moment." },
-  { title: "Ton budget", description: "Le prix affiché maximum, et la taille minimale du logement." },
-  { title: "Tes critères", description: "Ce qui compte vraiment pour toi. Le reste se règle dans les filtres." },
-  { title: "Mode autopilot", description: "L'extension relance la recherche toute seule et te prévient dès qu'une nouvelle annonce sort." },
+  { id: "extension", title: "Installe l'extension", description: "Elle cherche les annonces sur les 5 sites depuis ton navigateur. Deux minutes, une seule fois." },
+  { id: "places", title: "Où veux-tu acheter ?", description: "Coche les villes qui t'intéressent. Tu pourras changer ça à tout moment." },
+  { id: "budget", title: "Ton budget", description: "Le prix affiché maximum, et la taille minimale du logement." },
+  { id: "criteria", title: "Tes critères", description: "Ce qui compte vraiment pour toi. Le reste se règle dans les filtres." },
+  { id: "autopilot", title: "Mode autopilot", description: "L'extension relance la recherche toute seule et te prévient dès qu'une nouvelle annonce sort." },
 ];
 
 const ALL_ARRONDISSEMENTS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -50,6 +53,9 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
   const router = useRouter();
   const set = <K extends keyof Query>(key: K, value: Query[K]) => setQuery((q) => ({ ...q, [key]: value }));
   const isLast = step === STEPS.length - 1;
+  const current = STEPS[step].id;
+  const extension = useExtensionVersion();
+  const extensionReady = Boolean(extension.data) && !isOutdated(extension.data ?? "0");
 
   function next() {
     if (!isLast) {
@@ -89,7 +95,9 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
           <p className="mt-2 text-muted-foreground">{STEPS[step].description}</p>
 
           <div className="mt-8 flex flex-col gap-6">
-            {step === 0 && (
+            {current === "extension" && <ExtensionInstallGuide version={extension.data} />}
+
+            {current === "places" && (
               <>
                 <CityChecklist value={query.cities} onChange={(cities) => set("cities", cities)} />
                 {query.cities.includes("paris") && (
@@ -112,7 +120,7 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
               </>
             )}
 
-            {step === 1 && (
+            {current === "budget" && (
               <>
                 <Question label="Prix maximum">
                   <Chips options={PRICE_PRESETS.map((p) => ({ key: String(p), label: kiloEuros(p) }))} selected={String(query.maxPrice)} onSelect={(v) => set("maxPrice", Number(v))} />
@@ -134,7 +142,7 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
               </>
             )}
 
-            {step === 3 && (
+            {current === "autopilot" && (
               <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Fréquence de l'autopilot">
                 {AUTOPILOT_MODES.map((m) => (
                   <button
@@ -162,7 +170,7 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
               </div>
             )}
 
-            {step === 2 && (
+            {current === "criteria" && (
               <>
                 <Question label="Performance énergétique (DPE)">
                   <Chips options={DPE_PRESETS.map((d) => ({ key: d.value, label: d.label }))} selected={query.maxDpe} onSelect={(v) => set("maxDpe", v)} />
@@ -183,7 +191,7 @@ export function Onboarding({ initialQuery, initialAutopilot, firstName }: { init
             </Button>
             <Button size="lg" disabled={saving} onClick={next}>
               {saving ? <Spinner /> : null}
-              {isLast ? "Lancer ma recherche" : "Continuer"}
+              {isLast ? "Lancer ma recherche" : current === "extension" && !extensionReady ? "Plus tard" : "Continuer"}
               {!saving && (isLast ? <Check /> : <ArrowRight />)}
             </Button>
           </div>

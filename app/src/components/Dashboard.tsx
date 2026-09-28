@@ -8,7 +8,7 @@ import { saveAutopilotAction, signOutAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
@@ -31,6 +31,7 @@ import { useAddFavoriteToNotion, useNotionStatus, useRemoveFavoriteFromNotion } 
 import type { NotionListing } from "@/lib/notion/types";
 import { AutopilotSelect } from "./AutopilotSelect";
 import { CitySelect } from "./CitySelect";
+import { ExtensionInstallDialog } from "./ExtensionInstall";
 import { SimpleSelect } from "./controls";
 import { SourceSelect } from "./SourceSelect";
 import { FiltersPanel } from "./FiltersPanel";
@@ -73,6 +74,7 @@ export function Dashboard({ user, notionResult, initialQuery, initialAutopilot }
   const [query, setQuery] = usePersistedQuery(initialQuery);
   const [autopilot, setAutopilot] = useState(initialAutopilot);
   const [notionOpen, setNotionOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
 
   const extension = useExtensionVersion();
   const connected = Boolean(extension.data);
@@ -168,7 +170,7 @@ export function Dashboard({ user, notionResult, initialQuery, initialAutopilot }
           {search.isPending && progress && <span className="max-w-72 truncate text-muted-foreground text-sm">{progress}</span>}
 
           <div className="ms-auto flex items-center gap-2">
-            <ExtensionBadge loading={extension.isPending} version={extension.data} />
+            <ExtensionBadge loading={extension.isPending} version={extension.data} onClick={() => setInstallOpen(true)} />
             <Button variant="outline" size="sm" onClick={() => downloadCsv(listings)}>
               <Download /> CSV
             </Button>
@@ -210,13 +212,21 @@ export function Dashboard({ user, notionResult, initialQuery, initialAutopilot }
               <EmptyDescription>
                 {connected
                   ? "Lance « Chercher les annonces » ou élargis les filtres."
-                  : "chrome://extensions → Mode développeur → Charger l'extension non empaquetée → extension/build/chrome-mv3-prod, puis recharge la page."}
+                  : "Elle cherche les annonces pour toi sur les 5 sites."}
               </EmptyDescription>
             </EmptyHeader>
+            {!connected && (
+              <EmptyContent>
+                <Button onClick={() => setInstallOpen(true)}>
+                  <Download /> Installer l'extension
+                </Button>
+              </EmptyContent>
+            )}
           </Empty>
         )}
       </main>
 
+      <ExtensionInstallDialog open={installOpen} onOpenChange={setInstallOpen} version={extension.data} />
       <NotionDialog open={notionOpen} status={notion.data} onOpenChange={setNotionOpen} />
     </div>
   );
@@ -233,25 +243,18 @@ function useNotionResultToast(result: NotionResult | undefined) {
   }, [result, router]);
 }
 
-function ExtensionBadge({ loading, version }: { loading: boolean; version: string | null | undefined }) {
+function ExtensionBadge({ loading, version, onClick }: { loading: boolean; version: string | null | undefined; onClick: () => void }) {
   if (loading) return <Badge variant="outline">Extension…</Badge>;
-  if (!version) {
+  if (version && !isOutdated(version)) {
     return (
-      <Badge variant="warning">
-        <Plug /> Extension non détectée
-      </Badge>
-    );
-  }
-  if (isOutdated(version)) {
-    return (
-      <Badge variant="warning" title="chrome://extensions → bouton ↻ sur Immo Radar, puis recharge la page">
-        <Plug /> Extension à recharger (v{version})
+      <Badge variant="success">
+        <Plug /> Extension v{version}
       </Badge>
     );
   }
   return (
-    <Badge variant="success">
-      <Plug /> Extension v{version}
+    <Badge variant="warning" render={<button type="button" onClick={onClick} />} className="cursor-pointer">
+      <Download /> {version ? "Mettre à jour l'extension" : "Installer l'extension"}
     </Badge>
   );
 }
