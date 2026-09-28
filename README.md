@@ -31,7 +31,7 @@ L'extension n'est pas sur le Chrome Web Store : l'app sert un zip (`app/public/d
 
 ```bash
 cd extension
-PLASMO_PUBLIC_APP_URL=https://ton-domaine.vercel.app bun run release   # build + zip dans app/public/downloads
+PLASMO_PUBLIC_APP_URL=https://immo.dissi.fr bun run release   # build + zip dans app/public/downloads
 ```
 
 Relance `release` à chaque nouvelle version (pense à monter `version` dans `extension/package.json` et `MIN_EXTENSION_VERSION` dans l'app), puis commit le zip.
