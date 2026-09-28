@@ -161,15 +161,19 @@ export function Dashboard({ user, notionResult, initialQuery, initialAutopilot }
       <FiltersPanel query={query} onChange={setQuery} />
 
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b bg-background/85 px-6 py-3 backdrop-blur">
+        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b bg-background/85 px-6 py-3 backdrop-blur xl:flex-nowrap">
+          <div className="flex shrink-0 items-center gap-3">
           <CitySelect value={query.cities} onChange={(cities) => setQuery({ ...query, cities })} />
           <AutopilotSelect value={autopilot} lastRun={extensionSettings.data?.lastRun} onChange={changeAutopilot} />
-          <Button disabled={search.isPending || !connected || isOutdated(extension.data ?? "0")} onClick={startSearch}>
+          <Button className="w-52" disabled={search.isPending || !connected || isOutdated(extension.data ?? "0")} onClick={startSearch}>
             {search.isPending ? <Spinner /> : <Search />} {search.isPending ? "Recherche…" : "Chercher les annonces"}
           </Button>
-          {search.isPending && progress && <span className="max-w-72 truncate text-muted-foreground text-sm">{progress}</span>}
+          </div>
+          <span className="min-w-0 flex-1 truncate text-muted-foreground text-sm" aria-live="polite" title={search.isPending ? progress : undefined}>
+            {search.isPending ? progress : ""}
+          </span>
 
-          <div className="ms-auto flex items-center gap-2">
+          <div className="ms-auto flex shrink-0 items-center gap-2">
             <ExtensionBadge loading={extension.isPending} version={extension.data} onClick={() => setInstallOpen(true)} />
             <Button variant="outline" size="sm" onClick={() => downloadCsv(listings)}>
               <Download /> CSV
