@@ -1,0 +1,11 @@
+{
+  "name": "immo-radar",
+  "private": true,
+  "scripts": {
+    "install:all": "cd app && bun install && cd ../extension && bun install",
+    "dev:app": "cd app && bun run dev",
+    "dev:extension": "cd extension && bun run dev",
+    "build": "cd extension && bun run build && cd ../app && bun run build",
+    "test": "cd app && bun test src"
+  }
+}
